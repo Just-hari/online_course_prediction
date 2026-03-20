@@ -6,7 +6,7 @@ warnings.filterwarnings('ignore')
 import sklearn
 
 # Custom CSS for Styling
-background = '''
+page_style_css = '''
 <style>
 /* Background */
 body {
@@ -52,12 +52,12 @@ h1, h2, h3 {
 '''
 
 # Apply the CSS
-st.markdown(background, unsafe_allow_html=True)
+st.markdown(page_style_css, unsafe_allow_html=True)
 
 # Main application UI
 st.header("Online Engagement Prediction 🧑‍💻")
-cola, colb, colc = st.columns(3)
-with colb:
+left_col, center_col, right_col = st.columns(3)
+with center_col:
     st.image(
         "https://static.vecteezy.com/system/resources/previews/002/173/392/non_2x/student-studying-at-home-free-vector.jpg", 
         caption="Company Logo 🏫"
@@ -79,8 +79,8 @@ st.write("### Sample Dataset Preview 📊")
 st.dataframe(df.head())
 
 # Taking X column values from the user
-col1, col2 = st.columns(2)
-with col1:
+category_col, time_col = st.columns(2)
+with category_col:
     # Modify CourseCategory to take unique values as input and map them
     category_mapping = {
         'Health': 0,
@@ -91,46 +91,45 @@ with col1:
     }
     unique_categories = list(category_mapping.keys())
     selected_category = st.selectbox("Select Course Category 🎓", unique_categories)
-    c = category_mapping[selected_category]   
+    encoded_course_category = category_mapping[selected_category]   
 
-with col2:
-    t = st.number_input(f"Enter Time Spent On Course ⏳ {df.TimeSpentOnCourse.min()} to Max {df.TimeSpentOnCourse.max()}")
+with time_col:
+    time_spent_on_course = st.number_input(f"Enter Time Spent On Course ⏳ {df.TimeSpentOnCourse.min()} to Max {df.TimeSpentOnCourse.max()}")
 
-col3, col4 = st.columns(2)
-with col3:
-    n = st.number_input(f"Enter Number Of Videos Watched 🎥 {df.NumberOfVideosWatched.min()} to Max {df.NumberOfVideosWatched.max()}")
+videos_col, quizzes_col = st.columns(2)
+with videos_col:
+    num_videos_watched = st.number_input(f"Enter Number Of Videos Watched 🎥 {df.NumberOfVideosWatched.min()} to Max {df.NumberOfVideosWatched.max()}")
     
-with col4:
-    q = st.number_input(f"Enter Number Of Quizzes Taken 📝 {df.NumberOfQuizzesTaken.min()} to Max {df.NumberOfQuizzesTaken.max()}")
+with quizzes_col:
+    num_quizzes_taken = st.number_input(f"Enter Number Of Quizzes Taken 📝 {df.NumberOfQuizzesTaken.min()} to Max {df.NumberOfQuizzesTaken.max()}")
 
-col5, col6 = st.columns(2)
-with col5:
-    qs = st.number_input(f"Enter Quiz Scores 📈 {df.QuizScores.min()} to Max {df.QuizScores.max()}")
+scores_col, completion_col = st.columns(2)
+with scores_col:
+    quiz_scores = st.number_input(f"Enter Quiz Scores 📈 {df.QuizScores.min()} to Max {df.QuizScores.max()}")
     
-with col6:
-    cr = st.number_input(f"Enter Completion Rate ✅ {df.CompletionRate.min()} to Max {df.CompletionRate.max()}")
+with completion_col:
+    completion_rate = st.number_input(f"Enter Completion Rate ✅ {df.CompletionRate.min()} to Max {df.CompletionRate.max()}")
 
 # Device Type Input
-d = st.number_input(f"Enter DeviceType 📱 {df.DeviceType.min()} to Max {df.DeviceType.max()}")
+device_type = st.number_input(f"Enter DeviceType 📱 {df.DeviceType.min()} to Max {df.DeviceType.max()}")
 
 # Collect input data
-xdata = [c, t, n, q, qs, cr, d]
+input_feature_values = [encoded_course_category, time_spent_on_course, num_videos_watched, num_quizzes_taken, quiz_scores, completion_rate, device_type]
 
 # Prediction Logic
 
-import pickle
-with open('modelrf.pkl', 'rb') as f:
-    model = pickle.load(f)
+with open('modelrf.pkl', 'rb') as model_file:
+    model = pickle.load(model_file)
 
 # Prepare the DataFrame for prediction
-x = pd.DataFrame([xdata], columns=df.columns[0:7])
+input_features_df = pd.DataFrame([input_feature_values], columns=df.columns[0:7])
 
 st.write("Given Input:")
-st.dataframe(x)
+st.dataframe(input_features_df)
 
 # Prediction Button
 if st.button("Predict 🔮"):
-    prediction = model.predict(x)
+    prediction = model.predict(input_features_df)
 
     if prediction[0] == 0:
         st.success('Course Not Completed ❌') 
